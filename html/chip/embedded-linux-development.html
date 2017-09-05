@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Embedded Linux Development on C.H.I.P &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../yocto/index.html" />
+    <link rel="prev" title="The C.H.I.P Community" href="community.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="embedded-linux-development-on-c-h-i-p">
+<h1>Embedded Linux Development on C.H.I.P<a class="headerlink" href="#embedded-linux-development-on-c-h-i-p" title="Permalink to this headline">¶</a></h1>
+<p>The intention with this guide is to give a brief introduction to compiling your sources. It is by no means complete.
+The guide aims to be as generic as possible. So no editor/ide specific details will be added (hopefully).</p>
+<div class="section" id="general-hardware-information">
+<h2>General Hardware Information<a class="headerlink" href="#general-hardware-information" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>ARM CortexTM-A8 Core</li>
+<li>ARMv7 Instruction set plus Thumb-2 Instruction Set</li>
+<li>32KB Instruction Cache and 32KB Data Cache</li>
+<li>256KB L2 Cache</li>
+<li>3D Graphic Engine</li>
+<li>Support Open GL ES 1.1/2.0 and open VG 1.1</li>
+<li>Support multi-format video decoding, including VP6/8, AVS, H.264, H.263 , MPEG-1/2/4, etc</li>
+<li>Up to <a class="reference external" href="mailto:1080p&#37;&#52;&#48;30fps">1080p<span>&#64;</span>30fps</a> resolution in all formats</li>
+</ul>
+<p>You can find the datasheet in the git repo <a class="reference external" href="https://github.com/NextThingCo/CHIP-Hardware/tree/master">CHIP-Hardware</a>.</p>
+</div>
+<div class="section" id="toolchain">
+<h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this headline">¶</a></h2>
+<p>In this section a list of many available toolchains will be added over time.</p>
+<div class="section" id="buildroot">
+<h3>Buildroot<a class="headerlink" href="#buildroot" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Essentially ::</dt>
+<dd>$ git clone &#8211;branch chip/stable <a class="reference external" href="https://github.com/NextThingCo/CHIP-buildroot.git">https://github.com/NextThingCo/CHIP-buildroot.git</a> ~/chip-buildroot
+$ cd chip-buildroot
+$ make chip_defconfig
+$ make menuconfig
+Add/remove packages
+$ make linux-menuconfig
+Add/remove kernel features/drivers
+$ make</dd>
+</dl>
+<p>The resulting images will be found under <code class="docutils literal"><span class="pre">output/images</span></code></p>
+</div>
+<div class="section" id="yocto">
+<h3>Yocto<a class="headerlink" href="#yocto" title="Permalink to this headline">¶</a></h3>
+<p>There are nightly toolchain installer builds available from <em>autobuilder.yoctoproject.org</em>. So you could simply download the arm toolchain from there.
+You can download the latest build from <a class="reference external" href="http://autobuilder.yoctoproject.org/pub/releases/CURRENT/toolchain/x86_64/poky-glibc-x86_64-core-image-sato-armv7a-vfp-neon-toolchain-1.8+snapshot.sh">[here]</a>.</p>
+<p>In order to build the default configuration make sure you have the following packages installed: <em>git, diffstat, unzip, texinfo, python2, chrpath, wget, xterm, sdl, socat, cpio and lzop</em></p>
+<div class="section" id="compile-your-own-toolchain">
+<h4>Compile your own toolchain<a class="headerlink" href="#compile-your-own-toolchain" title="Permalink to this headline">¶</a></h4>
+<p>In order to compile it yourself, we need to do a little more.
+To compile a toolchain using yocto, we need first to download the sources and setup the build environment.</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>$ git clone &#8211;branch fido git://git.yoctoproject.org/poky.git ~/poky
+$ cd poky &amp;&amp; source oe-init-build-env build-chip-toolchain</dd>
+</dl>
+<p>Any armv7 toolchain should suffice. As basis for the toolchain we are going to use a MACHINE with the same instruction set (armv7). As an example, the <em>olinuxino-a13</em> machine from meta-sunxi bitbake layer have the armv7 instruction set.</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>$ git clone <a class="reference external" href="https://github.com/linux-sunxi/meta-sunxi">https://github.com/linux-sunxi/meta-sunxi</a></dd>
+</dl>
+<p>Add the path to the layer in BBLAYERS variable by editing <em>~/poky/build-chip-toolchain/conf/bblayers.conf</em></p>
+<dl class="docutils">
+<dt>::</dt>
+<dd><dl class="first last docutils">
+<dt>BBLAYERS ?= &#8221; </dt>
+<dd>/home/user/poky/meta /home/user/poky/meta-yocto /home/user/poky/meta-yocto-bsp /home/user/meta-sunxi &#8220;</dd>
+</dl>
+</dd>
+</dl>
+<p>Now edit the <em>~/poky/build-chip-toolchain/conf/local.conf</em> and change the machine to an Allwinner A13 machine.</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>MACHINE ?= olinuxino-a13</dd>
+</dl>
+<p>Time to build the toolchain, simply type</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>$ bitbake -k meta-toolchain</dd>
+</dl>
+<p>You can now find the toolchain installer under <em>~/poky/build-chip-toolchain/tmp/deploy/sdk</em></p>
+</div>
+<div class="section" id="install-the-toolchain">
+<h4>Install the toolchain<a class="headerlink" href="#install-the-toolchain" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>The install script have a few options you may or may not wish to tweak. ::</dt>
+<dd><dl class="first last docutils">
+<dt>Usage: poky-glibc-x86_64-meta-toolchain-armv7a-vfp-neon-toolchain-1.8.sh [-y] [-d &lt;dir&gt;]&#8221;</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-y</span></kbd></td>
+<td>Automatic yes to all prompts&#8221;</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-d <var>&lt;dir&gt;</var></span></kbd></td>
+<td>Install the SDK to &lt;dir&gt;&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>======== Advanced DEBUGGING ONLY OPTIONS ========&#8221;</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-S</span></kbd></td>
+<td>Save relocation scripts&#8221;</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-R</span></kbd></td>
+<td>Do not relocate executables&#8221;</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-D</span></kbd></td>
+<td>use set -x to see what is going on&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt>To install the toolchain simply run the following as superuser (sudo, su etc), it requires superuser because default installation dir is <em>/opt</em>. ::</dt>
+<dd># cd /home/user/poky/build-chip-toolchain/tmp/deploy/sdk
+# ./poky-glibc-x86_64-meta-toolchain-armv7a-vfp-neon-toolchain-1.8.sh -y</dd>
+</dl>
+<p>If you downloaded the pre-built toolchain then it would have been named <em>poky-glibc-x86_64-core-image-sato-armv7a-vfp-neon-toolchain-1.8+snapshot.sh</em>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="u-boot">
+<h2>U-boot<a class="headerlink" href="#u-boot" title="Permalink to this headline">¶</a></h2>
+<p>The universal bootloader.</p>
+<div class="section" id="compile-u-boot">
+<h3>Compile U-boot<a class="headerlink" href="#compile-u-boot" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>In order to build the bootloader, first make sure your toolchain is ready to use. ::</dt>
+<dd>$ source /opt/poky/1.8/environment-setup-armv7a-vfp-neon-poky-linux-gnueabi
+$ echo &#8220;[$ARCH]$CROSS_COMPILE&#8221;
+[arm]arm-poky-linux-gnueabi-</dd>
+<dt>When the toolchain is ready to use, get the u-boot sources and compile them. ::</dt>
+<dd>$ git clone &#8211;branch nextthing/CHIP <a class="reference external" href="https://github.com/NextThingCo/CHIP-u-boot.git">https://github.com/NextThingCo/CHIP-u-boot.git</a> chip-u-boot
+$ cd chip-u-boot
+$ make CHIP_defconfig
+$ make</dd>
+</dl>
+</div>
+<div class="section" id="u-boot-commands">
+<h3>U-boot Commands<a class="headerlink" href="#u-boot-commands" title="Permalink to this headline">¶</a></h3>
+<p>The following section describes the most important commands available in U-Boot. Please note that U-Boot is highly configurable, so not all of these commands may be available in the configuration of U-Boot installed on your hardware, or additional commands may exist. You can use the help command to print a list of all available commands for your configuration.</p>
+<dl class="docutils">
+<dt>Here is a list of some common commands that may exist in your u-boot configuration::</dt>
+<dd><p class="first">Information Commands
+bdinfo     - Print Board Info structure
+coninfo    - Print console devices and informations
+flinfo     - Print FLASH memory information
+iminfo     - Print header information for application image
+help       - Print online help</p>
+<p>Memory Commands
+base       - Print or set address offset
+crc32      - Checksum calculation
+cmp        - Memory compare
+cp         - Memory copy
+md         - Memory display
+mm         - Memory modify (auto-incrementing)
+mtest      - Simple RAM test
+mw         - Memory write (fill)
+nm         - Memory modify (constant address)
+loop       - Infinite loop on address range</p>
+<p>Flash Memory Commands
+cp         - Memory copy
+flinfo     - Print FLASH memory information
+erase      - Erase FLASH memory
+protect    - Enable or disable FLASH write protection
+mtdparts   - Define a Linux compatible MTD partition scheme</p>
+<p>Execution Control Commands
+source     - Run script from memory
+bootm      - Boot application image from memory
+go         - Start application at address &#8216;addr&#8217;</p>
+<p>Download Commands
+bootp      - Boot image via network using BOOTP/TFTP protocol
+dhcp       - Invoke DHCP client to obtain IP/boot params
+loadb      - Load binary file over serial line (kermit mode)
+loads      - Load S-Record file over serial line
+rarpboot   - Boot image via network using RARP/TFTP protocol
+tftpboot   - Boot image via network using TFTP protocol</p>
+<p>Environment Variables Commands
+printenv   - Print environment variables
+saveenv    - Save environment variables to persistent storage
+setenv     - Set environment variables
+run        - Run commands in an environment variable
+bootd      - Boot default, i.e., run &#8216;bootcmd&#8217;</p>
+<p>Flattened Device Tree support
+fdt addr   - Select FDT to work on
+fdt list   - Print one level
+fdt print  - Recursive print
+fdt mknode - Create new nodes
+fdt set    - Set node properties
+fdt rm     - Remove nodes or properties
+fdt move   - Move FDT blob to new address
+fdt chosen - Fixup dynamic info</p>
+<p>Special Commands
+i2c        - I2C sub-system</p>
+<p class="last">Miscellaneous Commands
+echo       - Echo args to console
+reset      - Perform RESET of the CPU
+sleep      - Delay execution for some time
+version    - Print monitor version
+?          - Alias for &#8216;help&#8217;</p>
+</dd>
+</dl>
+<p>You can find details about the <a class="reference external" href="http://www.denx.de/wiki/view/DULG/UBootCommandLineInterface">commands from www.denx.de</a></p>
+</div>
+</div>
+<div class="section" id="linux-kernel">
+<h2>Linux Kernel<a class="headerlink" href="#linux-kernel" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="install-build-dependencies">
+<h3>Install build dependencies<a class="headerlink" href="#install-build-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>gcc, etc..</p>
+</div>
+<div class="section" id="compile-linux-kernel">
+<h3>Compile Linux Kernel<a class="headerlink" href="#compile-linux-kernel" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>In order to build the kernel, first make sure your toolchain is ready to use. ::</dt>
+<dd>$ source /opt/poky/1.8/environment-setup-armv7a-vfp-neon-poky-linux-gnueabi
+$ echo &#8220;[$ARCH]$CROSS_COMPILE&#8221;
+[arm]arm-poky-linux-gnueabi-</dd>
+<dt>When the toolchain is ready to use, get the linux sources for C.H.I.P and compile them. ::</dt>
+<dd>$ git clone <a class="reference external" href="https://github.com/NextThingCo/CHIP-linux.git">https://github.com/NextThingCo/CHIP-linux.git</a> chip-linux
+$ cd chip-linux
+$ make sunxi_defconfig
+$ make</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="device-tree-compilation">
+<h2>Device Tree Compilation<a class="headerlink" href="#device-tree-compilation" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>The DTS file needs to be compiled into a DTB file that the kernel can understand. The device tree compiler (DTC), located under <em>scripts/dtc</em> in the linux kernel source, will compile the DTS file into a DTB file with the command::</dt>
+<dd>$ ./scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb CHIP.dts</dd>
+<dt>The DTC compiler can also de-compile a DTB file back to the DTS file with the command::</dt>
+<dd>$ ./scripts/dtc/dtc -I dtb -O dts -o CHIP.dts devicetree.dtb</dd>
+<dt>You can view other options for the DTC compiler with the <cite>-h</cite> option::</dt>
+<dd>$ ./scripts/dtc/dtc -h</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Embedded Linux Development on C.H.I.P</a><ul>
+<li><a class="reference internal" href="#general-hardware-information">General Hardware Information</a></li>
+<li><a class="reference internal" href="#toolchain">Toolchain</a><ul>
+<li><a class="reference internal" href="#buildroot">Buildroot</a></li>
+<li><a class="reference internal" href="#yocto">Yocto</a><ul>
+<li><a class="reference internal" href="#compile-your-own-toolchain">Compile your own toolchain</a></li>
+<li><a class="reference internal" href="#install-the-toolchain">Install the toolchain</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#u-boot">U-boot</a><ul>
+<li><a class="reference internal" href="#compile-u-boot">Compile U-boot</a></li>
+<li><a class="reference internal" href="#u-boot-commands">U-boot Commands</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#linux-kernel">Linux Kernel</a><ul>
+<li><a class="reference internal" href="#install-build-dependencies">Install build dependencies</a></li>
+<li><a class="reference internal" href="#compile-linux-kernel">Compile Linux Kernel</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#device-tree-compilation">Device Tree Compilation</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+      <li>Previous: <a href="community.html" title="previous chapter">The C.H.I.P Community</a></li>
+      <li>Next: <a href="../yocto/index.html" title="next chapter">&lt;no title&gt;</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/chip/embedded-linux-development.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Rikard Söderström.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/chip/embedded-linux-development.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
