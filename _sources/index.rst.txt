@@ -15,6 +15,7 @@ With the difference that the plot holes may result in real life consequences...
    :caption: Contents:
 
    chip/index
+   git/index
    yocto/index
 
 Indices and tables
