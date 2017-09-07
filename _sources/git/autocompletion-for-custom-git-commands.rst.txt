@@ -159,8 +159,8 @@ Final notes
 -----------
 Finally I would like to thank the authors of the bash manual. It helps a lot in understanding everything.
 We all have our own way to learn, and I do not believe this guide could have been written in 4 hours without the help
-of the others behind the references [#BASH_MANUAL]_,[#GIT_BASH_COMPLETION]_,[#COMPGEN_STACKOVERFLOW]_,
-[#COMPGEN_SERVER_TUTORIALS]_,[#CUSTOM_COMPLETIONS]_
+of the others behind the references [#BASH_MANUAL]_, [#GIT_BASH_COMPLETION]_, [#COMPGEN_STACKOVERFLOW]_,
+[#COMPGEN_SERVER_TUTORIALS]_, [#CUSTOM_COMPLETIONS]_
 
 ::
 
