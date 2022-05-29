@@ -1,0 +1,127 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+
+<script>
+
+function parse_matchdata(matches, participants)
+{
+    promisesMatchData = Array()
+    for(matchIdentifier in matches)
+    {
+        match = matches[matchIdentifier];
+        promise = fetch("matches/" + matchIdentifier + ".json")
+          .then(response => response.json())
+
+        promisesMatchData.push(promise);
+    }
+
+    Promise.all(promisesMatchData)
+      .then((values) =>
+          {
+              matchesKeys = Object.keys(matches);
+              for(var i=0; i < matchesKeys.length; i++)
+              {
+                  matches[matchesKeys[i]]["data"] = values[i];
+                  // match["data"] = values;
+              }
+
+              console.log(matches);
+              console.log(participants);
+
+              fillColors = [
+                  'rgba(255, 99, 132, 0.2)',
+                  'rgba(255, 159, 64, 0.2)',
+                  'rgba(255, 205, 86, 0.2)',
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(201, 203, 207, 0.2)'
+              ];
+
+              // Generate plots
+              plots = []
+              for(var i=0; i < values.length; i++)
+              {
+                  matchParticipants = values[i]["participant identifiers"];
+
+                  var plotData = {labels: [], datasets: []};
+                  participantsScore = {};
+                  matchParticipants.forEach(participantId =>
+                      {
+                          plotData.datasets.push({
+                            label: participants[participantId].name,
+                            backgroundColor: fillColors[participantId],
+                            data: []
+                          });
+
+                          participantsScore[participantId] = Array();
+                      });
+
+                  Object.keys(values[i]).forEach(matchKey =>
+                  {
+                      if (matchKey.startsWith('basket '))
+                      {
+                          plotData.labels.push(matchKey);
+                          for(var j=0; j < matchParticipants.length; j++)
+                          {
+                              var participantId = matchParticipants[j];
+                              var scoreBoard = participantsScore[participantId];
+                              var score = values[i][matchKey][j];
+
+
+                              if (scoreBoard.length == 0)
+                              {
+                                  scoreBoard.push(score);
+                              }
+                              else
+                              {
+                                  scoreBoard.push(scoreBoard[scoreBoard.length - 1] + score);
+                              }
+
+                              plotData.datasets[j].data.push(score);
+                          }
+                      }
+                  });
+
+                  // add total score
+                  matchParticipants.forEach(participantId =>
+                      {
+                          plotData.datasets.push({
+                            type: "line",
+                            label: "cumSum - " + participants[participantId].name,
+                            borderColor: fillColors[participantId],
+                            data: participantsScore[participantId]
+                          });
+                      });
+
+                  console.log(participantsScore);
+
+                  var canvas = document.createElement("CANVAS");
+                  document.body.appendChild(canvas);
+                  var ctx = canvas.getContext("2d");
+                  plots.push(new Chart(ctx, {
+                      type: "bar",
+                      data: plotData,
+                      options: {
+                          plugins: {
+                              title: {
+                                  display: true,
+                                  text: matches[matchesKeys[i]].location + " @ " + matches[matchesKeys[i]].date
+                      }}}
+                  }));
+              }
+          });
+}
+
+promiseMatches = fetch("matches.json")
+  .then(response => response.json());
+promiseParticipants = fetch("participants.json")
+  .then(response => response.json());
+
+Promise.all([promiseMatches, promiseParticipants])
+  .then((values) =>
+      {
+          matches = values[0];
+          participants = values[1];
+          parse_matchdata(matches, participants);
+      });
+</script>

@@ -1,29 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rewriting history with git filter-branch &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.0.rc1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../yocto/index.html" />
@@ -34,47 +22,48 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body role="document">
+  </head><body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="rewriting-history-with-git-filter-branch">
 <h1>Rewriting history with git filter-branch<a class="headerlink" href="#rewriting-history-with-git-filter-branch" title="Permalink to this headline">¶</a></h1>
-<p>Git has a great manual entry <a class="footnote-reference" href="#git-filter-branch-manual" id="id1">[1]</a> for how to use <code class="docutils literal"><span class="pre">filter-branch</span></code> and since I&#8217;m bad at naming things,
-this guide is actually about something more concrete than simply rewriting history with git <code class="docutils literal"><span class="pre">filter-branch</span></code>.</p>
+<p>Git has a great manual entry <a class="footnote-reference brackets" href="#git-filter-branch-manual" id="id1">1</a> for how to use <code class="docutils literal notranslate"><span class="pre">filter-branch</span></code> and since I’m bad at naming things,
+this guide is actually about something more concrete than simply rewriting history with git <code class="docutils literal notranslate"><span class="pre">filter-branch</span></code>.</p>
 <div class="section" id="background">
 <h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
 <p>At work, we had this repository that had aged badly and literally everything was bunched together with no thought of code separation.
-Sure it&#8217;s easy to be lazy and place everything in one place, even if they have nothing to do with each other, like for example two separate
+Sure it’s easy to be lazy and place everything in one place, even if they have nothing to do with each other, like for example two separate
 applications. Well, alright they may be related, maybe there is an API that allows direct communication between the two, but that really
-isn&#8217;t a good enough reason to place them together. In this situation, what you do want is repository hierarchy, with a parent repository
+isn’t a good enough reason to place them together. In this situation, what you do want is repository hierarchy, with a parent repository
 that keeps track of all compatible versions of its children compatible.</p>
-<p>Of course, the repository used at work was confidential so cannot reference it here. Instead I will use a &#8220;highly random&#8221; open source
+<p>Of course, the repository used at work was confidential so cannot reference it here. Instead I will use a “highly random” open source
 project as reference, my personal favorite, the Linux kernel. Not that I am insinuating that the kernel needs to be broken down into
 smaller pieces.</p>
 </div>
 <div class="section" id="clone-a-repo-to-break-apart">
 <h2>Clone a repo to break apart<a class="headerlink" href="#clone-a-repo-to-break-apart" title="Permalink to this headline">¶</a></h2>
 <p>Okay let us get started already.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git breakable-repository
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git breakable-repository
 </pre></div>
 </div>
 </div>
 <div class="section" id="purge-repository-by-pathspec">
 <h2>Purge repository by pathspec<a class="headerlink" href="#purge-repository-by-pathspec" title="Permalink to this headline">¶</a></h2>
 <p>The problem at work, also have a problem with structure, trees that can potentially intersect with one another. So I needed a way to tell
-<code class="docutils literal"><span class="pre">filter</span> <span class="pre">branch</span></code> that I only want these directories and these files, therefor <code class="docutils literal"><span class="pre">--subdirectory-filter</span></code> will not work. We need to be able
+<code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">branch</span></code> that I only want these directories and these files, therefor <code class="docutils literal notranslate"><span class="pre">--subdirectory-filter</span></code> will not work. We need to be able
 to express us more precise that a simple directory.</p>
 <div class="section" id="brace-expansion-for-pathspecs">
 <h3>Brace expansion for PATHSPECs<a class="headerlink" href="#brace-expansion-for-pathspecs" title="Permalink to this headline">¶</a></h3>
-<p>First we need a way to handle brace expansion <a class="footnote-reference" href="#bash-brace-expansion" id="id2">[2]</a> in a <code class="docutils literal"><span class="pre">PATHSPEC</span></code></p>
+<p>First we need a way to handle brace expansion <a class="footnote-reference brackets" href="#bash-brace-expansion" id="id2">2</a> in a <code class="docutils literal notranslate"><span class="pre">PATHSPEC</span></code></p>
 <p>So what is a branch expansion, let us take a look at it using echo</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># Simple</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Simple</span>
 <span class="nb">echo</span> a<span class="o">{</span>,b<span class="o">}</span>
 a ab
 
@@ -87,10 +76,10 @@ a ab abc
 ag abdg abdeg abdefg abcdg abcdeg abcdefg
 </pre></div>
 </div>
-<p>So essentially we need away to replace the space between these expansions with the or of a regular expression, for <code class="docutils literal"><span class="pre">grep</span></code> without the
-<code class="docutils literal"><span class="pre">-e</span></code> flag this is <code class="docutils literal"><span class="pre">\|</span></code>. The stream editor <code class="docutils literal"><span class="pre">sed</span></code> <a class="footnote-reference" href="#sed" id="id3">[3]</a> to the rescue with the expression <code class="docutils literal"><span class="pre">s/</span> <span class="pre">/\\\|/g</span></code>.</p>
+<p>So essentially we need away to replace the space between these expansions with the or of a regular expression, for <code class="docutils literal notranslate"><span class="pre">grep</span></code> without the
+<code class="docutils literal notranslate"><span class="pre">-e</span></code> flag this is <code class="docutils literal notranslate"><span class="pre">\|</span></code>. The stream editor <code class="docutils literal notranslate"><span class="pre">sed</span></code> <a class="footnote-reference brackets" href="#sed" id="id3">3</a> to the rescue with the expression <code class="docutils literal notranslate"><span class="pre">s/</span> <span class="pre">/\\\|/g</span></code>.</p>
 <p>Putting it all together, we need</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> a<span class="o">{</span>,b<span class="o">{</span>,c<span class="o">}</span>d<span class="o">{</span>,e<span class="o">{</span>,f<span class="o">}}}</span>g<span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> a<span class="o">{</span>,b<span class="o">{</span>,c<span class="o">}</span>d<span class="o">{</span>,e<span class="o">{</span>,f<span class="o">}}}</span>g<span class="k">)</span><span class="s2">&quot;</span>
 <span class="nb">echo</span> <span class="nv">$PATHSPEC</span> <span class="p">|</span> sed <span class="s1">&#39;s/ /\/\|/g&#39;</span>
 ag/<span class="p">|</span>abdg/<span class="p">|</span>abdeg/<span class="p">|</span>abdefg/<span class="p">|</span>abcdg/<span class="p">|</span>abcdeg/<span class="p">|</span>abcdefg
 </pre></div>
@@ -99,23 +88,23 @@ ag/<span class="p">|</span>abdg/<span class="p">|</span>abdeg/<span class="p">|<
 </div>
 <div class="section" id="listing-files-and-folders-to-remove">
 <h3>Listing files and folders to remove<a class="headerlink" href="#listing-files-and-folders-to-remove" title="Permalink to this headline">¶</a></h3>
-<p>This is probably the simplest section, this is a mere show, pipe and grep <a class="footnote-reference" href="#grep" id="id4">[4]</a> command. Where we will the <code class="docutils literal"><span class="pre">-v</span></code> flag to invert the
+<p>This is probably the simplest section, this is a mere show, pipe and grep <a class="footnote-reference brackets" href="#grep" id="id4">4</a> command. Where we will the <code class="docutils literal notranslate"><span class="pre">-v</span></code> flag to invert the
 search pattern.</p>
-<p>So place yourself in the <code class="docutils literal"><span class="pre">breakable-repository</span></code>, then the files to keep could for example be</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
+<p>So place yourself in the <code class="docutils literal notranslate"><span class="pre">breakable-repository</span></code>, then the files to keep could for example be</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
 <span class="nb">echo</span> <span class="nv">$PATHSPEC</span> <span class="p">|</span> sed <span class="s1">&#39;s/ /\/\|/g&#39;</span>
 git ls-files <span class="p">|</span> grep <span class="k">$(</span><span class="nb">echo</span> <span class="nv">$PATHSPEC</span> <span class="p">|</span> sed <span class="s1">&#39;s/ /\\\|/g&#39;</span><span class="k">)</span>
 </pre></div>
 </div>
-<p>As you may notice, the result may not be exactly what we wanted. Since the pattern <code class="docutils literal"><span class="pre">drivers/makefile</span></code> is repeated in some sub-directories.
-Luckily, that is easily fixed by adding the start of string <code class="docutils literal"><span class="pre">^</span></code> (I noticed this when typing this, at work our paths did not contain
+<p>As you may notice, the result may not be exactly what we wanted. Since the pattern <code class="docutils literal notranslate"><span class="pre">drivers/makefile</span></code> is repeated in some sub-directories.
+Luckily, that is easily fixed by adding the start of string <code class="docutils literal notranslate"><span class="pre">^</span></code> (I noticed this when typing this, at work our paths did not contain
 repeated patterns like these ones).</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 <p>And the those not to keep, also since we will be performing the same regular expression many times it is a good idea to remember it before
 the looping over each commit.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
 <span class="nv">KEEP</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$PATHSPEC</span> <span class="p">|</span> sed <span class="s1">&#39;s/ /\\\|/g&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
 git ls-files <span class="p">|</span> grep -v <span class="nv">$KEEP</span>
 <span class="c1"># ... lots of files  (at time of writing, around 57k number of files) ...</span>
@@ -125,13 +114,13 @@ git ls-files <span class="p">|</span> grep -v <span class="nv">$KEEP</span>
 <div class="section" id="purging-without-checkout">
 <h3>Purging without checkout<a class="headerlink" href="#purging-without-checkout" title="Permalink to this headline">¶</a></h3>
 <p>Up until now, we have only prepared us for the action. However, before we proceed, consider this; Checking out all these files, deleting
-them, commit the changes and repeating the whole process for each commit will significant amount of time. Furthermore, isn&#8217;t all the data
+them, commit the changes and repeating the whole process for each commit will significant amount of time. Furthermore, isn’t all the data
 except the new git objects that are either treelike or commits already present?</p>
-<p>Yes, they are and yes we can simply skip most of that by working with the index. This is done using the <code class="docutils literal"><span class="pre">--index-filter</span></code> argument for
-<code class="docutils literal"><span class="pre">filter-branch</span></code> command. But we also need to inform both the <code class="docutils literal"><span class="pre">git</span> <span class="pre">ls-files</span></code> and <code class="docutils literal"><span class="pre">git</span> <span class="pre">rm</span></code> commands to use the index, this is done by
-adding the <code class="docutils literal"><span class="pre">--cached</span></code> argument.</p>
+<p>Yes, they are and yes we can simply skip most of that by working with the index. This is done using the <code class="docutils literal notranslate"><span class="pre">--index-filter</span></code> argument for
+<code class="docutils literal notranslate"><span class="pre">filter-branch</span></code> command. But we also need to inform both the <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">ls-files</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rm</span></code> commands to use the index, this is done by
+adding the <code class="docutils literal notranslate"><span class="pre">--cached</span></code> argument.</p>
 <p>So putting the first part of the puzzle together, we get.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PATHSPEC</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> ^drivers/<span class="o">{</span>Makefile,net/can/<span class="o">{</span>Makefile,spi<span class="o">}}</span><span class="k">)</span><span class="s2">&quot;</span>
 <span class="nv">KEEP</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$PATHSPEC</span> <span class="p">|</span> sed <span class="s1">&#39;s/ /\\\|/g&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
 git filter-branch --index-filter <span class="se">\</span>
     <span class="s2">&quot;git ls-files --cached | grep -v </span><span class="nv">$KEEP</span><span class="s2"> | xargs git rm --cached -qr -- &quot;</span> HEAD
@@ -145,7 +134,7 @@ action.</p>
 <div class="section" id="for-each-commit-perform-a-move-operation">
 <h2>For each commit perform a move operation<a class="headerlink" href="#for-each-commit-perform-a-move-operation" title="Permalink to this headline">¶</a></h2>
 <p>The second part is quite simple in comparison to the first, if we ignore the time to process factor.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nv">FROM</span><span class="o">=</span>drivers
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">FROM</span><span class="o">=</span>drivers
 <span class="nv">TO</span><span class="o">=</span>.
 git filter-branch --tree-filter <span class="s2">&quot;git mv -k </span><span class="nv">$FROM</span><span class="s2"> </span><span class="nv">$TO</span><span class="s2">&quot;</span> HEAD
 </pre></div>
@@ -157,7 +146,7 @@ git filter-branch --tree-filter <span class="s2">&quot;git mv -k </span><span cl
 However, if you do try this on the Linux kernel repository, you may notice it will take quite some time, i.e. approximately 3-5 hours
 depending on your machine for the purging alone, however, the last part will be significantly faster due to the fact that only the commits
 touching those files will be revisited.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="ch">#!/bin/env sh</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/env sh</span>
 
 <span class="nv">FROM</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
 <span class="nv">TO</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$2</span><span class="s2">&quot;</span>
@@ -180,55 +169,58 @@ git filter-branch -f --tree-filter <span class="s2">&quot;git mv -k </span><span
 </div>
 <p>Hope this will help someone (or myself again) in the future.</p>
 <p class="rubric">References</p>
-<table class="docutils footnote" frame="void" id="git-filter-branch-manual" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://git-scm.com/docs/git-filter-branch">https://git-scm.com/docs/git-filter-branch</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="bash-brace-expansion" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="https://www.gnu.org/software/bash/manual/bash.html#Brace-Expansion">https://www.gnu.org/software/bash/manual/bash.html#Brace-Expansion</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="sed" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="https://www.gnu.org/software/sed/manual/sed.html">https://www.gnu.org/software/sed/manual/sed.html</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="grep" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td><a class="reference external" href="https://www.gnu.org/software/grep/manual/grep.html">https://www.gnu.org/software/grep/manual/grep.html</a></td></tr>
-</tbody>
-</table>
+<dl class="footnote brackets">
+<dt class="label" id="git-filter-branch-manual"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://git-scm.com/docs/git-filter-branch">https://git-scm.com/docs/git-filter-branch</a></p>
+</dd>
+<dt class="label" id="bash-brace-expansion"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p><a class="reference external" href="https://www.gnu.org/software/bash/manual/bash.html#Brace-Expansion">https://www.gnu.org/software/bash/manual/bash.html#Brace-Expansion</a></p>
+</dd>
+<dt class="label" id="sed"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p><a class="reference external" href="https://www.gnu.org/software/sed/manual/sed.html">https://www.gnu.org/software/sed/manual/sed.html</a></p>
+</dd>
+<dt class="label" id="grep"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dd><p><a class="reference external" href="https://www.gnu.org/software/grep/manual/grep.html">https://www.gnu.org/software/grep/manual/grep.html</a></p>
+</dd>
+</dl>
 </div>
 </div>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Rewriting history with git filter-branch</a><ul>
-<li><a class="reference internal" href="#background">Background</a></li>
-<li><a class="reference internal" href="#clone-a-repo-to-break-apart">Clone a repo to break apart</a></li>
-<li><a class="reference internal" href="#purge-repository-by-pathspec">Purge repository by pathspec</a><ul>
-<li><a class="reference internal" href="#brace-expansion-for-pathspecs">Brace expansion for PATHSPECs</a></li>
-<li><a class="reference internal" href="#listing-files-and-folders-to-remove">Listing files and folders to remove</a></li>
-<li><a class="reference internal" href="#purging-without-checkout">Purging without checkout</a></li>
+<h1 class="logo"><a href="../index.html">soderstrom-rikard.github.io</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=soderstrom-rikard&repo=soderstrom-rikard.github.io&type=follow&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../chip/community.html">The C.H.I.P Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chip/embedded-linux-development.html">Embedded Linux Development on C.H.I.P</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autocompletion-for-custom-git-commands.html">Autocompletion for custom git commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing-sphinx-generated-docs-on-github-pages.html">Publishing sphinx generated documents on github</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rewriting history with git filter-branch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../yocto/building-archlinuxarm-distro.html">Building Arch Linux ARM distribution in Yocto</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../yocto/virtual-targets.html">Working with Yocto virtual targets</a></li>
 </ul>
-</li>
-<li><a class="reference internal" href="#for-each-commit-perform-a-move-operation">For each commit perform a move operation</a></li>
-<li><a class="reference internal" href="#final-script">Final script</a></li>
-</ul>
-</li>
-</ul>
+
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
@@ -240,23 +232,24 @@ git filter-branch -f --tree-filter <span class="s2">&quot;git mv -k </span><span
   </ul></li>
 </ul>
 </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/git/rewriting-history-with-git-filter-branch.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -265,8 +258,8 @@ git filter-branch -f --tree-filter <span class="s2">&quot;git mv -k </span><span
       &copy;2017, Rikard Söderström.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/git/rewriting-history-with-git-filter-branch.rst.txt"
