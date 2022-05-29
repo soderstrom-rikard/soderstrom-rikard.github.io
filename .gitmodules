@@ -1,3 +1,3 @@
 [submodule "build/html"]
 	path = build/html
-	url = https://github.com/soderstrom-rikard/soderstrom-rikard.github.io.git
+	url = git@github.com:soderstrom-rikard/soderstrom-rikard.github.io.git
