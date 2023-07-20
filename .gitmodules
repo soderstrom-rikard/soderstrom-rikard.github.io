@@ -1,9 +1,6 @@
 [submodule "build/html"]
 	path = build/html
 	url = git@github.com:soderstrom-rikard/soderstrom-rikard.github.io.git
-[submodule "source/_static_/frisbee-golf"]
-	path = source/_static_/frisbee-golf
-	url = git@github.com:soderstrom-rikard/frisbee-golf.git
 [submodule "source/_static/frisbee-golf"]
 	path = source/_static/frisbee-golf
 	url = git@github.com:soderstrom-rikard/frisbee-golf.git
