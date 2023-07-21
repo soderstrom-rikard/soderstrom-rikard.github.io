@@ -1,5 +1,8 @@
 # Minimal makefile for Sphinx documentation
 #
+ifeq (, $(shell which dot))
+ $(error "No dot in $(PATH), consider doing apt install graphviz")
+endif
 
 # You can set these variables from the command line.
 SPHINXOPTS    =

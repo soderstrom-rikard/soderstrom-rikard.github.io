@@ -16,6 +16,7 @@ With the difference that the plot holes may result in real life consequences...
 
    chip/index
    git/index
+   linux/index
    yocto/index
 
 Indices and tables
