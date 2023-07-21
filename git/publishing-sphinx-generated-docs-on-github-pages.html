@@ -1,17 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>Publishing sphinx generated documents on github &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Rewriting history with git filter-branch" href="rewriting-history-with-git-filter-branch.html" />
@@ -32,80 +35,82 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="publishing-sphinx-generated-documents-on-github">
-<h1>Publishing sphinx generated documents on github<a class="headerlink" href="#publishing-sphinx-generated-documents-on-github" title="Permalink to this headline">¶</a></h1>
+  <section id="publishing-sphinx-generated-documents-on-github">
+<h1>Publishing sphinx generated documents on github<a class="headerlink" href="#publishing-sphinx-generated-documents-on-github" title="Permalink to this heading">¶</a></h1>
 <p>Back when I started (2017-09-05) using sphinx for my github pages. I quickly googled and found a thread.
 However, the solutions they offered was not really what I was looking for.</p>
 <p>So instead I will present how I did it.</p>
-<div class="section" id="setting-up-your-repository">
-<h2>Setting up your repository<a class="headerlink" href="#setting-up-your-repository" title="Permalink to this headline">¶</a></h2>
+<section id="setting-up-your-repository">
+<h2>Setting up your repository<a class="headerlink" href="#setting-up-your-repository" title="Permalink to this heading">¶</a></h2>
 <p>First create the repository and place yourself in its directory. Also create an empty repository on your github.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git init github-user.github.io
-<span class="nb">cd</span> github-user.github.io
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>init<span class="w"> </span>github-user.github.io
+<span class="nb">cd</span><span class="w"> </span>github-user.github.io
 </pre></div>
 </div>
 <p>After that, add your remote for your github repo. Create an empty commit and push it.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git remote add origin https://github.com/github-user/github-user.github.io
-git commit --allow-empty <span class="s2">&quot;Inital commit&quot;</span>
-git push --set-upstream origin master
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://github.com/github-user/github-user.github.io
+git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span><span class="s2">&quot;Inital commit&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>--set-upstream<span class="w"> </span>origin<span class="w"> </span>master
 </pre></div>
 </div>
 <p>Now move to another empty branch <em>gh-pages</em>. This branch will contain all the sphinx sources.
 Also add the first branch as a submodule at <em>build/html</em>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git checkout --orphan gh-pages
-git remote add https://github.com/github-user/github-user.github.io build/html
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>--orphan<span class="w"> </span>gh-pages
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>https://github.com/github-user/github-user.github.io<span class="w"> </span>build/html
 </pre></div>
 </div>
-</div>
-<div class="section" id="creating-your-initial-sphinx">
-<h2>Creating your initial sphinx<a class="headerlink" href="#creating-your-initial-sphinx" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="creating-your-initial-sphinx">
+<h2>Creating your initial sphinx<a class="headerlink" href="#creating-your-initial-sphinx" title="Permalink to this heading">¶</a></h2>
 <p>Use the defaults from <em>sphinx-quickstart</em> except for the options explicitly shown below</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sphinx-quickstart
 ...
-&gt; Separate <span class="nb">source</span> and build directories <span class="o">(</span>y/n<span class="o">)</span> <span class="o">[</span>n<span class="o">]</span>: y
+&gt;<span class="w"> </span>Separate<span class="w"> </span><span class="nb">source</span><span class="w"> </span>and<span class="w"> </span>build<span class="w"> </span>directories<span class="w"> </span><span class="o">(</span>y/n<span class="o">)</span><span class="w"> </span><span class="o">[</span>n<span class="o">]</span>:<span class="w"> </span>y
 ...
-&gt; githubpages: create .nojekyll file to publish the document on GitHub pages <span class="o">(</span>y/n<span class="o">)</span> <span class="o">[</span>n<span class="o">]</span>: y
+&gt;<span class="w"> </span>githubpages:<span class="w"> </span>create<span class="w"> </span>.nojekyll<span class="w"> </span>file<span class="w"> </span>to<span class="w"> </span>publish<span class="w"> </span>the<span class="w"> </span>document<span class="w"> </span>on<span class="w"> </span>GitHub<span class="w"> </span>pages<span class="w"> </span><span class="o">(</span>y/n<span class="o">)</span><span class="w"> </span><span class="o">[</span>n<span class="o">]</span>:<span class="w"> </span>y
 ...
 </pre></div>
 </div>
 <p>After that, simply run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make html             <span class="c1"># Or whatever the equivalance is on M$</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>html<span class="w">             </span><span class="c1"># Or whatever the equivalance is on M$</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="publishing-method">
-<h2>Publishing method<a class="headerlink" href="#publishing-method" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="publishing-method">
+<h2>Publishing method<a class="headerlink" href="#publishing-method" title="Permalink to this heading">¶</a></h2>
 <p>When you have something you are satisfied with and ready to publish commit everything in submodule build/html first,
 then commit the remainders.</p>
-<div class="section" id="committing">
-<h3>Committing<a class="headerlink" href="#committing" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span> build/html<span class="p">;</span> git add .<span class="p">;</span> git commit -m <span class="s2">&quot;</span><span class="k">$(</span>date<span class="k">)</span><span class="s2">&quot;</span><span class="o">)</span>
-git add .<span class="p">;</span> git commit -m <span class="s2">&quot;First version of proj&quot;</span>
+<section id="committing">
+<h3>Committing<a class="headerlink" href="#committing" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>build/html<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>date<span class="k">)</span><span class="s2">&quot;</span><span class="o">)</span>
+git<span class="w"> </span>add<span class="w"> </span>.<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;First version of proj&quot;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="publishing">
-<h3>Publishing<a class="headerlink" href="#publishing" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span> build/html<span class="p">;</span> git push<span class="o">)</span>
-git push
+</section>
+<section id="publishing">
+<h3>Publishing<a class="headerlink" href="#publishing" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>build/html<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>push<span class="o">)</span>
+git<span class="w"> </span>push
 </pre></div>
 </div>
-</div>
-<div class="section" id="having-a-blast">
-<h3>Having a blast<a class="headerlink" href="#having-a-blast" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="having-a-blast">
+<h3>Having a blast<a class="headerlink" href="#having-a-blast" title="Permalink to this heading">¶</a></h3>
 <p>Done!</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="github-pages"><span class="brackets">1</span></dt>
-<dd><p><a class="reference external" href="https://pages.github.com">https://pages.github.com</a></p>
-</dd>
-<dt class="label" id="lucas-bardella"><span class="brackets">2</span></dt>
-<dd><p><a class="reference external" href="http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github">http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github</a></p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="github-pages" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://pages.github.com">https://pages.github.com</a></p>
+</aside>
+<aside class="footnote brackets" id="lucas-bardella" role="note">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github">http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github</a></p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
 
 
           </div>
@@ -162,7 +167,7 @@ git push
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -179,7 +184,7 @@ git push
       &copy;2017, Rikard Söderström.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

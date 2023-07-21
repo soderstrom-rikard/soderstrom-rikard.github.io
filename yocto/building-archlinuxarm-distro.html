@@ -1,17 +1,20 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>Building Arch Linux ARM distribution in Yocto &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Working with Yocto virtual targets" href="virtual-targets.html" />
@@ -32,19 +35,19 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="building-arch-linux-arm-distribution-in-yocto">
-<h1>Building Arch Linux ARM distribution in Yocto<a class="headerlink" href="#building-arch-linux-arm-distribution-in-yocto" title="Permalink to this headline">¶</a></h1>
+  <section id="building-arch-linux-arm-distribution-in-yocto">
+<h1>Building Arch Linux ARM distribution in Yocto<a class="headerlink" href="#building-arch-linux-arm-distribution-in-yocto" title="Permalink to this heading">¶</a></h1>
 <p>…WIP…</p>
-<div class="section" id="creating-the-arch-linux-arm-layer">
-<h2>Creating the Arch Linux ARM layer<a class="headerlink" href="#creating-the-arch-linux-arm-layer" title="Permalink to this headline">¶</a></h2>
+<section id="creating-the-arch-linux-arm-layer">
+<h2>Creating the Arch Linux ARM layer<a class="headerlink" href="#creating-the-arch-linux-arm-layer" title="Permalink to this heading">¶</a></h2>
 <p>Place yourself in the directory where you which to place the <em>meta-archlinuxarm</em> layer.</p>
 <dl class="simple">
 <dt>::</dt><dd><p>yocto-layer create archlinuxarm</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="creating-the-distribution-configuration-file">
-<h2>Creating the distribution configuration file<a class="headerlink" href="#creating-the-distribution-configuration-file" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="creating-the-distribution-configuration-file">
+<h2>Creating the distribution configuration file<a class="headerlink" href="#creating-the-distribution-configuration-file" title="Permalink to this heading">¶</a></h2>
 <dl class="simple">
 <dt>In distribution layer, named meta-archlinuxarm from above create the file ::</dt><dd><p>conf/distro/archlinuxarm.conf</p>
 </dd>
@@ -56,20 +59,20 @@ DISTRO_VERSION = “2015.09.01”
 # TCLIBC</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="provide-miscellaneous-variables">
-<h2>Provide miscellaneous variables<a class="headerlink" href="#provide-miscellaneous-variables" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="provide-miscellaneous-variables">
+<h2>Provide miscellaneous variables<a class="headerlink" href="#provide-miscellaneous-variables" title="Permalink to this heading">¶</a></h2>
 <p>Be sure to define any other variables for which you want to create a default or enforce as part of the distribution configuration. You can include nearly any variable from the <em>local.conf</em> file. The variables you use are not limited to the list in the previous bullet item.</p>
-</div>
-<div class="section" id="point-to-your-distribution-configuration-file">
-<h2>Point to Your distribution configuration file<a class="headerlink" href="#point-to-your-distribution-configuration-file" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="point-to-your-distribution-configuration-file">
+<h2>Point to Your distribution configuration file<a class="headerlink" href="#point-to-your-distribution-configuration-file" title="Permalink to this heading">¶</a></h2>
 <dl class="simple">
 <dt>In your <em>local.conf</em> file in the Build Directory, set your <em>DISTRO</em> variable to point to your distribution’s configuration file. For example, if your distribution’s configuration file is named <em>archlinuxarm.conf</em>, then you point to it as follows::</dt><dd><p>DISTRO = “archlinuxarm”</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="add-more-to-the-layer-if-necessary">
-<h2>Add more to the layer if necessary<a class="headerlink" href="#add-more-to-the-layer-if-necessary" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="add-more-to-the-layer-if-necessary">
+<h2>Add more to the layer if necessary<a class="headerlink" href="#add-more-to-the-layer-if-necessary" title="Permalink to this heading">¶</a></h2>
 <p>Use your layer to hold other information needed for the distribution</p>
 <ul class="simple">
 <li><p>Add recipes for installing distro-specific configuration files that are not already installed by another recipe. If you have distro-specific configuration files that are included by an existing recipe, you should add an append file (.bbappend) for those. For general information and recommendations on how to add recipes to your layer, see the “Creating Your Own Layer” and “Best Practices to Follow When Creating Layers” sections in the official documentation.</p></li>
@@ -77,8 +80,8 @@ DISTRO_VERSION = “2015.09.01”
 <li><p>Add a psplash append file for a branded splash screen. For information on append files, see the “Using .bbappend Files” section.</p></li>
 <li><p>Add any other append files to make custom changes that are specific to individual recipes.</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -135,7 +138,7 @@ DISTRO_VERSION = “2015.09.01”
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -152,7 +155,7 @@ DISTRO_VERSION = “2015.09.01”
       &copy;2017, Rikard Söderström.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
