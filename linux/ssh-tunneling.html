@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Understanding Secure Shell Tunneling &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../yocto/index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="understanding-secure-shell-tunneling">
+<h1>Understanding Secure Shell Tunneling<a class="headerlink" href="#understanding-secure-shell-tunneling" title="Permalink to this heading">¶</a></h1>
+<div class="graphviz"><img src="../_images/graphviz-67f62a90768a2dec6e89a0ee8625dbabd933067c.png" alt="digraph foo {
+   &quot;gotaland&quot; -&gt; &quot;goteborg&quot;;
+   &quot;malmo&quot; -&gt; &quot;gotaland&quot; [dir = &quot;both&quot;];
+
+   &quot;gotaland&quot; -&gt; &quot;svealand&quot;;
+   &quot;stockholm&quot; -&gt; &quot;uppsala&quot;;
+   &quot;stockholm&quot; -&gt; &quot;svealand&quot; [dir = &quot;both&quot;];
+
+   &quot;norrland&quot; -&gt; &quot;uppsala&quot;;
+   &quot;norrland&quot; -&gt; &quot;umea&quot;;
+   &quot;kiruna&quot; -&gt; &quot;norrland&quot;;
+}" class="graphviz" /></div>
+<p>Let us use the hypothetical network map above, this means some city servers in Sweden between
+would have some issues communicating.</p>
+<p>The goal for today is to let a user that can reach umea connect to goteborg.
+You are however limited in such a way that you can only login to kiruna and gotaland directly.
+So how do we solve this?</p>
+<p>But first let us explore a couple of concepts related to ssh tunneling general.</p>
+<section id="concept-1-local-forwarding">
+<h2>Concept 1 - Local Forwarding<a class="headerlink" href="#concept-1-local-forwarding" title="Permalink to this heading">¶</a></h2>
+<p>The term “local forwarding” simply means open an ssh tunnel from my local computer to a host
+reachable by server x <a class="footnote-reference brackets" href="#ssh-manual" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. In common tongue this is normally just called an ssh tunnel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>-L [bind_address:]port:host:hostport
+-L [bind_address:]port:remote_socket
+-L local_socket:host:hostport
+-L local_socket:remote_socket
+        Specifies that connections to the given TCP port or Unix socket on the local (client) host are to be
+        forwarded to the given host and port, or Unix socket, on the remote side.  This works by allocating a
+        socket to listen to either a TCP port on the local side, optionally bound to the specified bind_address,
+        or to a Unix socket.  Whenever a connection is made to the local port or socket, the connection is for‐
+        warded over the secure channel, and a connection is made to either host port hostport, or the Unix
+        socket remote_socket, from the remote machine.
+
+        Port forwardings can also be specified in the configuration file.  Only the superuser can forward privi‐
+        leged ports.  IPv6 addresses can be specified by enclosing the address in square brackets.
+
+        By default, the local port is bound in accordance with the GatewayPorts setting.  However, an explicit
+        bind_address may be used to bind the connection to a specific address.  The bind_address of “localhost”
+        indicates that the listening port be bound for local use only, while an empty address or ‘*’ indicates
+        that the port should be available from all interfaces.
+</pre></div>
+</div>
+<p>Connections made to the <cite>bind_address</cite> and <cite>port</cite> on the local machine will be forwarded to the <cite>host</cite> and <cite>hostport</cite> reachable by the remote machine.</p>
+<p>Let us have a look at an example</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># From kiruna</span>
+kiruna$<span class="w"> </span>ssh<span class="w"> </span>norrland
+norrland$<span class="w"> </span>ssh<span class="w"> </span>-L<span class="w"> </span>umea:80022:uppsala:20022<span class="w"> </span>-p<span class="w"> </span><span class="m">70022</span><span class="w"> </span>umea
+umea$
+
+<span class="c1"># From umea</span>
+umea$<span class="w"> </span>ssh<span class="w"> </span>-p<span class="w"> </span><span class="m">80022</span><span class="w"> </span>umea
+uppsala$
+</pre></div>
+</div>
+<p>This has now made umea able to reach uppsala on port 20022.
+So we have started the navigation towards goteborg</p>
+</section>
+<section id="concept-2-remote-forwarding">
+<h2>Concept 2 - Remote Forwarding<a class="headerlink" href="#concept-2-remote-forwarding" title="Permalink to this heading">¶</a></h2>
+<p>The term “remote forwarding” is the opposite of “local forwarding” in the regard that it forwards
+the connection made on the server back to a host reachable from our local machine <a class="footnote-reference brackets" href="#ssh-manual" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+In common tongue this is called a reverse ssh tunnel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>-R [bind_address:]port:host:hostport
+-R [bind_address:]port:local_socket
+-R remote_socket:host:hostport
+-R remote_socket:local_socket
+-R [bind_address:]port
+        Specifies that connections to the given TCP port or Unix socket on the remote (server) host are to be
+        forwarded to the local side.
+
+        This works by allocating a socket to listen to either a TCP port or to a Unix socket on the remote side.
+        Whenever a connection is made to this port or Unix socket, the connection is forwarded over the secure
+        channel, and a connection is made from the local machine to either an explicit destination specified by
+        host port hostport, or local_socket, or, if no explicit destination was specified, ssh will act as a
+        SOCKS 4/5 proxy and forward connections to the destinations requested by the remote SOCKS client.
+
+        Port forwardings can also be specified in the configuration file.  Privileged ports can be forwarded
+        only when logging in as root on the remote machine.  IPv6 addresses can be specified by enclosing the
+        address in square brackets.
+
+        By default, TCP listening sockets on the server will be bound to the loopback interface only.  This may
+        be overridden by specifying a bind_address.  An empty bind_address, or the address ‘*’, indicates that
+        the remote socket should listen on all interfaces.  Specifying a remote bind_address will only succeed
+        if the server&#39;s GatewayPorts option is enabled (see sshd_config(5)).
+
+        If the port argument is ‘0’, the listen port will be dynamically allocated on the server and reported to
+        the client at run time.  When used together with -O forward, the allocated port will be printed to the
+        standard output.
+</pre></div>
+</div>
+<p>Connections made to the <cite>bind_address</cite> and <cite>port</cite> on the remote server will be forwarded to the <cite>host</cite> and <cite>hostport</cite> reachable by the local machine.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># From gotaland</span>
+gotaland$<span class="w"> </span>ssh<span class="w"> </span>-R<span class="w"> </span>svealand:10022:gotaland:20022<span class="w"> </span>-p<span class="w"> </span><span class="m">30022</span><span class="w"> </span>svealand
+svealand$
+
+<span class="c1"># From svealand</span>
+svealand$<span class="w"> </span>ssh<span class="w"> </span>-p<span class="w"> </span><span class="m">10022</span><span class="w"> </span>svealand
+gotaland$
+</pre></div>
+</div>
+</section>
+<section id="concept-3-jump-servers">
+<h2>Concept 3 - Jump Servers<a class="headerlink" href="#concept-3-jump-servers" title="Permalink to this heading">¶</a></h2>
+<p>The term “remote forwarding” is the opposite of “local forwarding” in the regard that it forwards
+the connection made on the server back to a host reachable from our local machine <a class="footnote-reference brackets" href="#ssh-manual" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+In common tongue this is called a reverse ssh tunnel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>ssh connects and logs into the specified destination, which may be specified as either [user@]hostname or a URI
+of the form ssh://[user@]hostname[:port].  The user must prove their identity to the remote machine using one of
+several methods (see below).
+
+...
+
+-J destination
+        Connect to the target host by first making a ssh connection to the jump host described by destination
+        and then establishing a TCP forwarding to the ultimate destination from there.  Multiple jump hops may
+        be specified separated by comma characters.  This is a shortcut to specify a ProxyJump configuration di‐
+        rective.  Note that configuration directives supplied on the command-line generally apply to the desti‐
+        nation host and not any specified jump hosts.  Use ~/.ssh/config to specify configuration for jump
+        hosts.
+</pre></div>
+</div>
+<p>So why am I talking about jump servers? Weren’t we talking about ssh tunnels?</p>
+<p>Well, the real power of ssh tunnels only become clear when used in combination with jump servers.
+In the “Remote Forwarding” concept we could only reach svealand.</p>
+<p>But let us extend that example with jump server syntax</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># From malmo</span>
+malmo$<span class="w"> </span>ssh<span class="w"> </span>-J<span class="w"> </span>gotaland:10022,svealand:20022,stockholm:30022<span class="w"> </span><span class="se">\</span>
+<span class="w">           </span>-R<span class="w"> </span>localhost:50022:gotaland:10022<span class="w"> </span>-p<span class="w"> </span><span class="m">40022</span><span class="w"> </span>uppsala
+uppsala$
+
+<span class="c1"># From uppsala</span>
+svealand$<span class="w"> </span>ssh<span class="w"> </span>-J<span class="w"> </span>localhost:50022<span class="w"> </span>-p<span class="w"> </span><span class="m">60022</span><span class="w"> </span>goteborg
+gotaborg$
+</pre></div>
+</div>
+<p>This has now made uppsala able to reach goteborg.</p>
+</section>
+<section id="putting-it-all-together">
+<h2>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this heading">¶</a></h2>
+<p>With a small tweak of the first example we can now do</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># User 1 from malmo</span>
+malmo$<span class="w"> </span>ssh<span class="w"> </span>-J<span class="w"> </span>gotaland:10022,svealand:20022,stockholm:30022<span class="w"> </span><span class="se">\</span>
+<span class="w">           </span>-R<span class="w"> </span>localhost:50022:gotaland:10022<span class="w"> </span>-p<span class="w"> </span><span class="m">40022</span><span class="w"> </span>uppsala
+uppsala$
+
+<span class="c1"># User 2 from kiruna</span>
+kiruna$<span class="w"> </span>ssh<span class="w"> </span>norrland
+norrland$<span class="w"> </span>ssh<span class="w"> </span>-L<span class="w"> </span>umea:80022:uppsala:50022<span class="w"> </span>-p<span class="w"> </span><span class="m">70022</span><span class="w"> </span>umea
+umea$
+
+<span class="c1"># User 3 from umea</span>
+umea$<span class="w"> </span>ssh<span class="w"> </span>-J<span class="w"> </span>umea:80022,uppsala:50022<span class="w"> </span>-p<span class="w"> </span><span class="m">60022</span><span class="w"> </span>goteborg
+goteborg$
+</pre></div>
+</div>
+<p>User from umea is now able to reach goteborg. User 1,2 and 3 can all be separate users or the same.
+But in accordance with the rules of this exercise, User 1 and User 2 are the same while User 3 is different.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="ssh-manual" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>)</span>
+<p><a class="reference external" href="https://www.man7.org/linux/man-pages/man1/ssh.1.html">https://www.man7.org/linux/man-pages/man1/ssh.1.html</a></p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">soderstrom-rikard.github.io</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=soderstrom-rikard&repo=soderstrom-rikard.github.io&type=follow&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../chip/community.html">The C.H.I.P Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chip/embedded-linux-development.html">Embedded Linux Development on C.H.I.P</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../git/autocompletion-for-custom-git-commands.html">Autocompletion for custom git commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../git/publishing-sphinx-generated-docs-on-github-pages.html">Publishing sphinx generated documents on github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../git/rewriting-history-with-git-filter-branch.html">Rewriting history with git filter-branch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Understanding Secure Shell Tunneling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../yocto/building-archlinuxarm-distro.html">Building Arch Linux ARM distribution in Yocto</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../yocto/virtual-targets.html">Working with Yocto virtual targets</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">&lt;no title&gt;</a></li>
+      <li>Next: <a href="../yocto/index.html" title="next chapter">&lt;no title&gt;</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Rikard Söderström.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/linux/ssh-tunneling.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
