@@ -119,9 +119,9 @@ Connections made to the `bind_address` and `port` on the remote server will be f
 
 Concept 3 - Jump Servers
 .............................
-The term "remote forwarding" is the opposite of "local forwarding" in the regard that it forwards
-the connection made on the server back to a host reachable from our local machine [#SSH_MANUAL]_.
-In common tongue this is called a reverse ssh tunnel.
+The term "jump server" simply means a server which purpose is to relay traffic to another server.
+Jump servers can also be chained in such away that multiple jumps can be performed in a "single connection" [#SSH_MANUAL]_.
+Jump servers have many names, such as hop servers, relay servers, proxy servers etc.
 
 ::
 

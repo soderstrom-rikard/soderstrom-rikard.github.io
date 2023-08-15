@@ -141,9 +141,9 @@ gotaland$
 </section>
 <section id="concept-3-jump-servers">
 <h2>Concept 3 - Jump Servers<a class="headerlink" href="#concept-3-jump-servers" title="Permalink to this heading">¶</a></h2>
-<p>The term “remote forwarding” is the opposite of “local forwarding” in the regard that it forwards
-the connection made on the server back to a host reachable from our local machine <a class="footnote-reference brackets" href="#ssh-manual" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
-In common tongue this is called a reverse ssh tunnel.</p>
+<p>The term “jump server” simply means a server which purpose is to relay traffic to another server.
+Jump servers can also be chained in such away that multiple jumps can be performed in a “single connection” <a class="footnote-reference brackets" href="#ssh-manual" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+Jump servers have many names, such as hop servers, relay servers, proxy servers etc.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>ssh connects and logs into the specified destination, which may be specified as either [user@]hostname or a URI
 of the form ssh://[user@]hostname[:port].  The user must prove their identity to the remote machine using one of
 several methods (see below).
