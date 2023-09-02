@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <td id="formTable" />
+            <td>
+                <!--
+                <math/> root of a mathematical formula
+                <mi/>   Symbol
+                <mn/>   Numeric value
+                <mo/>   Operator
+
+                <munder/>     the second child will be rendered under the first child
+                <mover/>     the second child will be rendered over the first child
+                <munderover/> the second child will be rendered as a under the first child
+                              and third child will be rendered as a over the first child
+                <msub/>       the second child will be rendered as a subscript on the first child
+                <msup/>       the second child will be rendered as a superscript on the first child
+                <msubsup/>    the second child will be rendered as a subscript on the first child
+                              and third child will be rendered as a superscript on the first child
+                <mrow/>       renders symbols after each other on the same row
+                <mfrac/>      renders a fractal with first child as the numerator
+                              and second child as the denominator
+
+                -->
+                <!-- <mi>2</mi>Math Symbol -->
+                <math display="block">
+                    <mrow>
+                        <mi>B(x)</mi>
+                        <mo>=</mo>
+                        <mfrac>
+                        <mrow>
+                            <msub>
+                                <mi>μ</mi>
+                                <mn>0</mn>
+                            </msub>
+                            <mi>I</mi>
+                            <msup>
+                                <mi>r</mi>
+                                <mn>2</mn>
+                            </msup>
+                            <mi>N</mi>
+                        </mrow>
+                        <mrow>
+                            <mo>2</mo>
+                            <msup>
+                                <mrow>
+                                    <mo>(</mo>
+                                    <msup>
+                                        <mi>x</mi>
+                                        <mn>2</mn>
+                                    </msup>
+                                    <mo>+</mo>
+                                    <msup>
+                                        <mi>r</mi>
+                                        <mn>2</mn>
+                                    </msup>
+                                    <mo>)</mo>
+                                </mrow>
+                                <mn>3/2</mn>
+                            </msup>
+                        </mrow>
+                        </mfrac>
+                        <mspace width="1em" />
+                        <mi>[T]</mi>
+                    </mrow>
+                </math>
+                <br/>
+                <math display="block">
+                    <mrow>
+                        <mi>P</mi>
+                        <mo>=</mo>
+                        <mi>R</mi>
+                        <mi>I</mi>
+                        <mspace width="1em" />
+                        <mi>[W]</mi>
+                    </mrow>
+                </math>
+            </td>
+        </tr>
+    </table>
+</body>
+<script>
+
+    const createRow = () => document.CreateElement("tr");
+    const generateId = (s) => s.split(" ")[0] + s.split(" ").slice(1).map((v) => v[0].toUpperCase()+v.slice(1)).join("");
+
+    // <h1>...</h1>
+    function buildFormHeader(prefix, unused__) {
+        var headerElement = document.createElement("h1");
+        headerElement.appendChild(document.createTextNode(prefix));
+
+        return headerElement;
+    }
+
+    // <label for="inputNumberOfTurns">N (number of turns):</label>
+    function buildFormLabel(prefix, data) {
+        const name = generateId(data.quantity);
+
+        var labelElement = document.createElement("label");
+        labelElement.for = `${prefix}_${name}`;
+        labelElement.appendChild(document.createTextNode(`${data.dimensionSymbol} (${data.quantity})`));
+
+        return labelElement;
+    }
+
+    // <input type="text" id="output_N" name="outputNumberOfTurns">
+    function buildFormInput(prefix, data) {
+        var inputElement = document.createElement("input");
+        inputElement.type = "text";
+        inputElement.id = `${prefix}_${data.dimensionSymbol}`;
+        inputElement.name = generateId(data.quantity);
+
+        return inputElement;
+    }
+
+    // <td>...</td>
+    function buildFormCol(buildFormData, prefix, data) {
+        console.log(buildFormData, prefix, data);
+        var col = document.createElement("td");
+        col.appendChild(buildFormData(prefix, data));
+
+        return col;
+    }
+
+    // <tr>...</tr>
+    function buildFormRow(buildFormData, data) {
+        var row = document.createElement("tr");
+        row.appendChild(buildFormCol(buildFormData, "input", data));
+        row.appendChild(buildFormCol(buildFormData, "output", data));
+        return row;
+    }
+
+    function buildForm() {
+        const formData = [{
+            "unitSymbol": null,
+            "dimensionSymbol": "N",
+            "unitName": "turn",
+            "quantity": "Number of loops"
+        },
+            {
+                "unitSymbol": "T",
+                "dimensionSymbol": "B",
+                "unitName": "tesla",
+                "quantity": "magnetic field"
+            },
+            {
+                "unitSymbol": "A",
+                "dimensionSymbol": "I",
+                "unitName": "ampere",
+                "quantity": "electric current"
+            },
+            {
+                "unitSymbol": "m",
+                "dimensionSymbol": "r",
+                "unitName": "metre",
+                "quantity": "radius"
+            },
+            {
+                "unitSymbol": "Ω",
+                "dimensionSymbol": "R",
+                "unitName": "ohm",
+                "quantity": "resistance"
+            }
+        ];
+
+        var tableElement = document.createElement("table");
+        tableElement.appendChild(buildFormRow(buildFormHeader, null));
+        for (const index in formData) {
+            tableElement.appendChild(buildFormRow(buildFormLabel, formData[index]));
+            tableElement.appendChild(buildFormRow(buildFormInput, formData[index]));
+        }
+
+        var formElement = document.createElement("form");
+        formElement.appendChild(tableElement);
+
+        return formElement;
+    }
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        //formElement.appendChild(document.createTextNode("hello world"));
+        document.getElementById("formTable").appendChild(buildForm());
+    });
+
+
+</script>
