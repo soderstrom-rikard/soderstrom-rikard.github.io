@@ -1,21 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Embedded Linux Development on C.H.I.P &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <script src="../_static/documentation_options.js?v=9786201b"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../git/index.html" />
@@ -37,11 +33,11 @@
           <div class="body" role="main">
             
   <section id="embedded-linux-development-on-c-h-i-p">
-<h1>Embedded Linux Development on C.H.I.P<a class="headerlink" href="#embedded-linux-development-on-c-h-i-p" title="Permalink to this heading">¶</a></h1>
+<h1>Embedded Linux Development on C.H.I.P<a class="headerlink" href="#embedded-linux-development-on-c-h-i-p" title="Link to this heading">¶</a></h1>
 <p>The intention with this guide is to give a brief introduction to compiling your sources. It is by no means complete.
 The guide aims to be as generic as possible. So no editor/ide specific details will be added (hopefully).</p>
 <section id="general-hardware-information">
-<h2>General Hardware Information<a class="headerlink" href="#general-hardware-information" title="Permalink to this heading">¶</a></h2>
+<h2>General Hardware Information<a class="headerlink" href="#general-hardware-information" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>ARM CortexTM-A8 Core</p></li>
 <li><p>ARMv7 Instruction set plus Thumb-2 Instruction Set</p></li>
@@ -55,10 +51,10 @@ The guide aims to be as generic as possible. So no editor/ide specific details w
 <p>You can find the datasheet in the git repo <a class="reference external" href="https://github.com/NextThingCo/CHIP-Hardware/tree/master">CHIP-Hardware</a>.</p>
 </section>
 <section id="toolchain">
-<h2>Toolchain<a class="headerlink" href="#toolchain" title="Permalink to this heading">¶</a></h2>
+<h2>Toolchain<a class="headerlink" href="#toolchain" title="Link to this heading">¶</a></h2>
 <p>In this section a list of many available toolchains will be added over time.</p>
 <section id="buildroot">
-<h3>Buildroot<a class="headerlink" href="#buildroot" title="Permalink to this heading">¶</a></h3>
+<h3>Buildroot<a class="headerlink" href="#buildroot" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>Essentially ::</dt><dd><p>$ git clone –branch chip/stable <a class="reference external" href="https://github.com/NextThingCo/CHIP-buildroot.git">https://github.com/NextThingCo/CHIP-buildroot.git</a> ~/chip-buildroot
 $ cd chip-buildroot
@@ -73,12 +69,12 @@ $ make</p>
 <p>The resulting images will be found under <code class="docutils literal notranslate"><span class="pre">output/images</span></code></p>
 </section>
 <section id="yocto">
-<h3>Yocto<a class="headerlink" href="#yocto" title="Permalink to this heading">¶</a></h3>
+<h3>Yocto<a class="headerlink" href="#yocto" title="Link to this heading">¶</a></h3>
 <p>There are nightly toolchain installer builds available from <em>autobuilder.yoctoproject.org</em>. So you could simply download the arm toolchain from there.
 You can download the latest build from <a class="reference external" href="http://autobuilder.yoctoproject.org/pub/releases/CURRENT/toolchain/x86_64/poky-glibc-x86_64-core-image-sato-armv7a-vfp-neon-toolchain-1.8+snapshot.sh">[here]</a>.</p>
 <p>In order to build the default configuration make sure you have the following packages installed: <em>git, diffstat, unzip, texinfo, python2, chrpath, wget, xterm, sdl, socat, cpio and lzop</em></p>
 <section id="compile-your-own-toolchain">
-<h4>Compile your own toolchain<a class="headerlink" href="#compile-your-own-toolchain" title="Permalink to this heading">¶</a></h4>
+<h4>Compile your own toolchain<a class="headerlink" href="#compile-your-own-toolchain" title="Link to this heading">¶</a></h4>
 <p>In order to compile it yourself, we need to do a little more.
 To compile a toolchain using yocto, we need first to download the sources and setup the build environment.</p>
 <dl class="simple">
@@ -112,7 +108,7 @@ $ cd poky &amp;&amp; source oe-init-build-env build-chip-toolchain</p>
 <p>You can now find the toolchain installer under <em>~/poky/build-chip-toolchain/tmp/deploy/sdk</em></p>
 </section>
 <section id="install-the-toolchain">
-<h4>Install the toolchain<a class="headerlink" href="#install-the-toolchain" title="Permalink to this heading">¶</a></h4>
+<h4>Install the toolchain<a class="headerlink" href="#install-the-toolchain" title="Link to this heading">¶</a></h4>
 <dl>
 <dt>The install script have a few options you may or may not wish to tweak. ::</dt><dd><dl>
 <dt>Usage: poky-glibc-x86_64-meta-toolchain-armv7a-vfp-neon-toolchain-1.8.sh [-y] [-d &lt;dir&gt;]”</dt><dd><dl class="option-list">
@@ -147,10 +143,10 @@ $ cd poky &amp;&amp; source oe-init-build-env build-chip-toolchain</p>
 </section>
 </section>
 <section id="u-boot">
-<h2>U-boot<a class="headerlink" href="#u-boot" title="Permalink to this heading">¶</a></h2>
+<h2>U-boot<a class="headerlink" href="#u-boot" title="Link to this heading">¶</a></h2>
 <p>The universal bootloader.</p>
 <section id="compile-u-boot">
-<h3>Compile U-boot<a class="headerlink" href="#compile-u-boot" title="Permalink to this heading">¶</a></h3>
+<h3>Compile U-boot<a class="headerlink" href="#compile-u-boot" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>In order to build the bootloader, first make sure your toolchain is ready to use. ::</dt><dd><p>$ source /opt/poky/1.8/environment-setup-armv7a-vfp-neon-poky-linux-gnueabi
 $ echo “[$ARCH]$CROSS_COMPILE”
@@ -164,7 +160,7 @@ $ make</p>
 </dl>
 </section>
 <section id="u-boot-commands">
-<h3>U-boot Commands<a class="headerlink" href="#u-boot-commands" title="Permalink to this heading">¶</a></h3>
+<h3>U-boot Commands<a class="headerlink" href="#u-boot-commands" title="Link to this heading">¶</a></h3>
 <p>The following section describes the most important commands available in U-Boot. Please note that U-Boot is highly configurable, so not all of these commands may be available in the configuration of U-Boot installed on your hardware, or additional commands may exist. You can use the help command to print a list of all available commands for your configuration.</p>
 <dl>
 <dt>Here is a list of some common commands that may exist in your u-boot configuration::</dt><dd><p>Information Commands
@@ -230,13 +226,13 @@ version    - Print monitor version
 </section>
 </section>
 <section id="linux-kernel">
-<h2>Linux Kernel<a class="headerlink" href="#linux-kernel" title="Permalink to this heading">¶</a></h2>
+<h2>Linux Kernel<a class="headerlink" href="#linux-kernel" title="Link to this heading">¶</a></h2>
 <section id="install-build-dependencies">
-<h3>Install build dependencies<a class="headerlink" href="#install-build-dependencies" title="Permalink to this heading">¶</a></h3>
+<h3>Install build dependencies<a class="headerlink" href="#install-build-dependencies" title="Link to this heading">¶</a></h3>
 <p>gcc, etc..</p>
 </section>
 <section id="compile-linux-kernel">
-<h3>Compile Linux Kernel<a class="headerlink" href="#compile-linux-kernel" title="Permalink to this heading">¶</a></h3>
+<h3>Compile Linux Kernel<a class="headerlink" href="#compile-linux-kernel" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>In order to build the kernel, first make sure your toolchain is ready to use. ::</dt><dd><p>$ source /opt/poky/1.8/environment-setup-armv7a-vfp-neon-poky-linux-gnueabi
 $ echo “[$ARCH]$CROSS_COMPILE”
@@ -251,7 +247,7 @@ $ make</p>
 </section>
 </section>
 <section id="device-tree-compilation">
-<h2>Device Tree Compilation<a class="headerlink" href="#device-tree-compilation" title="Permalink to this heading">¶</a></h2>
+<h2>Device Tree Compilation<a class="headerlink" href="#device-tree-compilation" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>The DTS file needs to be compiled into a DTB file that the kernel can understand. The device tree compiler (DTC), located under <em>scripts/dtc</em> in the linux kernel source, will compile the DTS file into a DTB file with the command::</dt><dd><p>$ ./scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb CHIP.dts</p>
 </dd>
@@ -336,8 +332,8 @@ $ make</p>
       &copy;2017, Rikard Söderström.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/chip/embedded-linux-development.rst.txt"

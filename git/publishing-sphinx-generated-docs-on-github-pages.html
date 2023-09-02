@@ -1,21 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Publishing sphinx generated documents on github &#8212; soderstrom-rikard.github.io 1.0.rc1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <script src="../_static/documentation_options.js?v=9786201b"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Rewriting history with git filter-branch" href="rewriting-history-with-git-filter-branch.html" />
@@ -37,12 +33,12 @@
           <div class="body" role="main">
             
   <section id="publishing-sphinx-generated-documents-on-github">
-<h1>Publishing sphinx generated documents on github<a class="headerlink" href="#publishing-sphinx-generated-documents-on-github" title="Permalink to this heading">¶</a></h1>
+<h1>Publishing sphinx generated documents on github<a class="headerlink" href="#publishing-sphinx-generated-documents-on-github" title="Link to this heading">¶</a></h1>
 <p>Back when I started (2017-09-05) using sphinx for my github pages. I quickly googled and found a thread.
 However, the solutions they offered was not really what I was looking for.</p>
 <p>So instead I will present how I did it.</p>
 <section id="setting-up-your-repository">
-<h2>Setting up your repository<a class="headerlink" href="#setting-up-your-repository" title="Permalink to this heading">¶</a></h2>
+<h2>Setting up your repository<a class="headerlink" href="#setting-up-your-repository" title="Link to this heading">¶</a></h2>
 <p>First create the repository and place yourself in its directory. Also create an empty repository on your github.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>init<span class="w"> </span>github-user.github.io
 <span class="nb">cd</span><span class="w"> </span>github-user.github.io
@@ -62,7 +58,7 @@ git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </s
 </div>
 </section>
 <section id="creating-your-initial-sphinx">
-<h2>Creating your initial sphinx<a class="headerlink" href="#creating-your-initial-sphinx" title="Permalink to this heading">¶</a></h2>
+<h2>Creating your initial sphinx<a class="headerlink" href="#creating-your-initial-sphinx" title="Link to this heading">¶</a></h2>
 <p>Use the defaults from <em>sphinx-quickstart</em> except for the options explicitly shown below</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sphinx-quickstart
 ...
@@ -78,33 +74,33 @@ git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </s
 </div>
 </section>
 <section id="publishing-method">
-<h2>Publishing method<a class="headerlink" href="#publishing-method" title="Permalink to this heading">¶</a></h2>
+<h2>Publishing method<a class="headerlink" href="#publishing-method" title="Link to this heading">¶</a></h2>
 <p>When you have something you are satisfied with and ready to publish commit everything in submodule build/html first,
 then commit the remainders.</p>
 <section id="committing">
-<h3>Committing<a class="headerlink" href="#committing" title="Permalink to this heading">¶</a></h3>
+<h3>Committing<a class="headerlink" href="#committing" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>build/html<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>date<span class="k">)</span><span class="s2">&quot;</span><span class="o">)</span>
 git<span class="w"> </span>add<span class="w"> </span>.<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;First version of proj&quot;</span>
 </pre></div>
 </div>
 </section>
 <section id="publishing">
-<h3>Publishing<a class="headerlink" href="#publishing" title="Permalink to this heading">¶</a></h3>
+<h3>Publishing<a class="headerlink" href="#publishing" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span>build/html<span class="p">;</span><span class="w"> </span>git<span class="w"> </span>push<span class="o">)</span>
 git<span class="w"> </span>push
 </pre></div>
 </div>
 </section>
 <section id="having-a-blast">
-<h3>Having a blast<a class="headerlink" href="#having-a-blast" title="Permalink to this heading">¶</a></h3>
+<h3>Having a blast<a class="headerlink" href="#having-a-blast" title="Link to this heading">¶</a></h3>
 <p>Done!</p>
 <p class="rubric">References</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="github-pages" role="note">
+<aside class="footnote brackets" id="github-pages" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
 <p><a class="reference external" href="https://pages.github.com">https://pages.github.com</a></p>
 </aside>
-<aside class="footnote brackets" id="lucas-bardella" role="note">
+<aside class="footnote brackets" id="lucas-bardella" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
 <p><a class="reference external" href="http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github">http://lucasbardella.com/blog/2010/02/hosting-your-sphinx-docs-in-github</a></p>
 </aside>
@@ -186,8 +182,8 @@ git<span class="w"> </span>push
       &copy;2017, Rikard Söderström.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/git/publishing-sphinx-generated-docs-on-github-pages.rst.txt"
