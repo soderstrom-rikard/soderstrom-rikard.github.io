@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<script>
+
+function randomArray(size, N) {
+    const v = new Uint8Array(size);
+    return crypto.getRandomValues(v).map((x) =>  x % N);
+}
+
+function charsInRange(firstChar, lastChar) {
+    return Array.from(
+        new Uint8Array(lastChar.charCodeAt() - firstChar.charCodeAt() + 1),
+        (_, i) => String.fromCharCode(i + firstChar.charCodeAt())).join('');
+}
+
+// The code verifier is a cryptographically random string using the characters
+// A-Z, a-z, 0-9, and the punctuation characters -._~ (hyphen, period,
+// underscore, and tilde), between 43 and 128 characters long.
+async function generateVerifier(size) {
+    const lookup = charsInRange('A','Z')
+        + charsInRange('a','z')
+        + charsInRange('0','9')
+        + '-._~';
+    return Array.from(
+        randomArray(size, lookup.length), (x) => lookup[x]).join('');
+}
+
+// Create a code challenge using a generated code verifier.
+// It is computed as a BASE64-URL-encoded string of the SHA256 hash of the
+// code verifier.
+async function generateChallenge(verifier) {
+    const digest = await window.crypto.subtle.digest(
+        "SHA-256",
+        new Uint8Array(Array.from(verifier, (x) => x.charCodeAt())));
+    return encodeURI(window.btoa(digest));
+}
+
+// The state is a cryptographically random string using the characters
+// A-Z, a-z, 0-9, between 10 and 20 characters long.
+async function generateState(size) {
+    const lookup = charsInRange('A','Z')
+        + charsInRange('a','z')
+        + charsInRange('0','9');
+    return Array.from(
+        randomArray(size, lookup.length), (x) => lookup[x]).join('');
+}
+
+async function generateSession(size) {
+    if (null == window.sessionStorage.getItem('oauth0-verifier')){
+        window.sessionStorage.setItem('oauth0-verifier', await generateVerifier(size));
+        window.sessionStorage.removeItem('oauth0-challenge');
+        window.sessionStorage.removeItem('oauth0-state');
+    }
+    const verifier = window.sessionStorage.getItem('oauth0-verifier');
+
+    if (null == window.sessionStorage.getItem('oauth0-challenge')){
+        window.sessionStorage.setItem('oauth0-challenge', await generateChallenge(verifier));
+    }
+
+    if (null == window.sessionStorage.getItem('oauth0-state')){
+        window.sessionStorage.setItem('oauth0-state', await generateState(size / 4));
+    }
+}
+
+async function createButton(anchor, id, callback) {
+    var button = document.createElement("button");
+    button.id = id;
+    button.innerText = id;
+    button.onclick = callback;
+
+    anchor.appendChild(button);
+
+    return button;
+}
+
+// FORM<GET> https://authorization-server.com/authorize
+async function loginButtonOnClick(evt) {
+    const creds = JSON.parse(window.sessionStorage.getItem('oauth0-creds'));
+    console.log(creds);
+
+    var components = {
+        response_type: 'code',
+        client_id: creds.web.client_id,
+        redirect_uri: window.location.origin,
+        scope: 'openid',
+        state: window.sessionStorage.getItem('oauth0-state'),
+        //code_challenge: window.sessionStorage.getItem('oauth0-challenge'),
+        //code_challenge_method: 'S256'
+    };
+
+    var form = document.createElement('form');
+    form.setAttribute('method', 'GET'); // send as a GET request
+    form.setAttribute('action', creds.web.auth_uri);
+
+    for (key in components) {
+        var input = document.createElement('input');
+        input.setAttribute('type','hidden');
+        input.setAttribute('name', key);
+        input.setAttribute('value', components[key]);
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// POST https://authorization-server.com/token
+async function refreshAccessToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const creds = JSON.parse(window.sessionStorage.getItem('oauth0-creds'));
+
+    var components = {
+        grant_type: 'authorization_code',
+        client_id: creds.web.client_id,
+        client_secret: creds.web.client_secret,
+        redirect_uri: window.location.origin,
+        code: urlParams.get('code')
+    };
+
+    const request = new Request(creds.web.token_uri, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(components),
+    });
+
+    const response = await fetch(request);
+    console.log(request, components);
+    window.sessionStorage.setItem(
+        'oauth0-token', JSON.stringify(await response.json()));
+
+    window.location.reload();
+}
+
+function getState() {
+    var currentState = "default";
+
+    const oauth0State = window.sessionStorage.getItem('oauth0-state');
+    const oauth0Creds = window.sessionStorage.getItem('oauth0-creds');
+    if (null != oauth0Creds){
+        currentState = "creds";
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if ((oauth0State == urlParams.get('state'))
+        && (urlParams.get('code') != null)
+        && (urlParams.get('scope') == 'openid')){
+        currentState = 'authorized-without-token';
+    }
+
+    if (null != window.sessionStorage.getItem('oauth0-token')){
+        currentState = "authorized-with-token";
+    }
+
+    return currentState;
+}
+
+function logoutButtonOnClick(evt) {
+    console.log('logout button clicked', evt);
+}
+
+function clearButtonOnClick(evt) {
+    window.sessionStorage.clear();
+    window.open(window.location.origin, "_self");
+    console.log('clear button clicked', evt);
+}
+
+function credsButtonOnClick(evt) {
+    const reader = new FileReader();
+    reader.addEventListener('load', (evt) => {
+        const creds = JSON.parse(evt.target.result);
+        const oauth0Creds = window.sessionStorage.setItem('oauth0-creds', evt.target.result);
+        window.location.reload();
+    });
+
+    reader.readAsText(evt.target.files[0]);
+}
+
+async function loadApplication() {
+    const clearButton = await createButton(document.body, 'clear cache', clearButtonOnClick);
+
+    var currentState = getState();
+    console.log("current state", currentState);
+    if (currentState == "default")
+    {
+        // ensure we are complete blank in state
+        window.sessionStorage.clear();
+        //window.open(window.location.origin, "_self");
+
+        const session = await generateSession(128);
+        var credsButton = document.createElement("input");
+        credsButton.accept=".json,.txt";
+        credsButton.multiple = false;
+        credsButton.type = "file";
+        credsButton.onchange = credsButtonOnClick;
+        document.body.appendChild(credsButton);
+    }
+    else if (currentState == "creds")
+    {
+        const loginButton = await createButton(document.body, 'login', loginButtonOnClick);
+    }
+    else if (currentState == "authorized-without-token")
+    {
+        await refreshAccessToken();
+    }
+    else if (currentState == "authorized-with-token")
+    {
+        const userToken = JSON.parse(window.sessionStorage.getItem('oauth0-token'));
+        const jwt_parts = userToken.id_token.split('.');
+        const userInfo = JSON.parse(window.atob(jwt_parts[1]));
+        const logoutButton = await createButton(document.body,'logout', logoutButtonOnClick);
+
+        var userDiv = document.createElement('div');
+        const tableData = Object.keys(userInfo).map(
+            (x) => `<tr><td>${x}</td><td>${userInfo[x]}</td></tr>`).join('\n');
+        userDiv.innerHTML = `<table>${tableData}</table>`;
+
+        document.body.appendChild(userDiv);
+    }
+}
+
+addEventListener("DOMContentLoaded", (event) => loadApplication());
+</script>
