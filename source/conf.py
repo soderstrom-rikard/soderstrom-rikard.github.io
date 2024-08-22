@@ -108,6 +108,12 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# A list of javascript files. The entry must be a filename string or a tuple
+# containing the filename string and the attributes dictionary.
+# The filename must be relative to the html_static_path, or a full URI with
+# scheme like 'https://example.org/script.js'.
+# The attributes dictionary is used for the <script> tag’s attributes.
+html_js_files = [ ('oauth/redirect.js', {'priority': 0}) ]
 
 # -- Options for HTMLHelp output ------------------------------------------
 
