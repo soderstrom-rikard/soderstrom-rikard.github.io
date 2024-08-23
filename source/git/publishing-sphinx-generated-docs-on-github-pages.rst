@@ -15,7 +15,7 @@ First create the repository and place yourself in its directory. Also create an 
   git init github-user.github.io
   cd github-user.github.io
 
-After that, add your remote for your github repo. Create an empty commit and push it.
+After that, add your remote for your github repo. Create an empty commit and push it [#GITHUB_PAGES]_.
 
 .. code-block:: bash
 
@@ -25,7 +25,7 @@ After that, add your remote for your github repo. Create an empty commit and pus
 
 
 Now move to another empty branch *gh-pages*. This branch will contain all the sphinx sources.
-Also add the first branch as a submodule at *build/html*. 
+Also add the first branch as a submodule at *build/html* [#LUCAS_BARDELLA]_.
 
 .. code-block:: bash
 
