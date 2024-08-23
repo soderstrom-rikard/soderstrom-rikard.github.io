@@ -45,20 +45,10 @@ async function generateState(size) {
 }
 
 async function generateSession(size) {
-    if (null == window.sessionStorage.getItem('oauth0-verifier')){
-        window.sessionStorage.setItem('oauth0-verifier', await generateVerifier(size));
-        window.sessionStorage.removeItem('oauth0-challenge');
-        window.sessionStorage.removeItem('oauth0-state');
-    }
+    window.sessionStorage.setItem('oauth0-verifier', await generateVerifier(size));
     const verifier = window.sessionStorage.getItem('oauth0-verifier');
-
-    if (null == window.sessionStorage.getItem('oauth0-challenge')){
-        window.sessionStorage.setItem('oauth0-challenge', await generateChallenge(verifier));
-    }
-
-    if (null == window.sessionStorage.getItem('oauth0-state')){
-        window.sessionStorage.setItem('oauth0-state', await generateState(size / 4));
-    }
+    window.sessionStorage.setItem('oauth0-challenge', await generateChallenge(verifier));
+    window.sessionStorage.setItem('oauth0-state', await generateState(size / 4));
 }
 
 async function createButton(anchor, id, callback) {
@@ -99,6 +89,8 @@ async function loginButtonOnClick(evt) {
         form.appendChild(input);
     }
     document.body.appendChild(form);
+
+    window.sessionStorage.setItem('oauth0-redirect', window.location.origin + window.location.pathname);
     form.submit();
 }
 
@@ -160,7 +152,7 @@ function logoutButtonOnClick(evt) {
 
 function clearButtonOnClick(evt) {
     window.sessionStorage.clear();
-    window.open(window.location.origin, "_self");
+    window.open(window.location.origin + window.location.pathname, "_self");
     console.log('clear button clicked', evt);
 }
 
@@ -184,7 +176,6 @@ async function loadApplication() {
     {
         // ensure we are complete blank in state
         window.sessionStorage.clear();
-        //window.open(window.location.origin, "_self");
 
         const session = await generateSession(128);
         var credsButton = document.createElement("input");
@@ -200,6 +191,7 @@ async function loadApplication() {
     }
     else if (currentState == "authorized-without-token")
     {
+        window.sessionStorage.removeItem('oauth0-redirect');
         await refreshAccessToken();
     }
     else if (currentState == "authorized-with-token")

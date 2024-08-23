@@ -6,6 +6,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import os
 import ssl
+import sys
 
 def generate_cert(cert_path):
     """
@@ -58,12 +59,24 @@ class HTTPSServer(HTTPServer):
             self.socket,
             server_side=True)
 
-certfile_path = "server.pem"
+source_path = os.getcwd()
+root_path = os.getcwd()
+
+if len(sys.argv) > 1:
+    source_path = os.path.abspath(sys.argv[1])
+
+if len(sys.argv) > 2:
+    root_path = os.path.abspath(sys.argv[2])
+
+print("source_path", source_path)
+print("root_path", root_path)
+
+certfile_path = os.path.join(root_path, "server.pem")
 generate_cert(certfile_path)
 
 host= ''
 port = 8443
-http_handler = partial(SimpleHTTPRequestHandler, directory=os.getcwd())
+http_handler = partial(SimpleHTTPRequestHandler, directory=source_path)
 with HTTPSServer(certfile_path, (host, port), http_handler) as httpd:
     [h, p] = httpd.socket.getsockname()
     print(f"Serving HTTPS on {h} port {p} (https://{h}:{p}/) ...")
